@@ -13,28 +13,47 @@
 # limitations under the License.
 
 from datetime import datetime
+import argparse
 import os
 import sys
 
-import jsonpickle
-from dotenv import load_dotenv
-from todoist_api_python.api import TodoistAPI
+import jsonpickle # pip install jsonpickle
+from dotenv import load_dotenv # pip install python-dotenv
+from todoist_api_python.api import TodoistAPI # pip install todoist-api-python
 
 
 def main():
-    load_dotenv()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--dest")
+    args = parser.parse_args()
 
-    backup_dir: str = os.environ["backup_dir"]
+    loaded_dotenv: bool = False
+
+    backup_dir: str
+    if args.dest:
+        backup_dir = args.dest
+    else:
+        load_dotenv()
+        loaded_dotenv = True
+        backup_dir = os.environ["backup_dir"]
     if not backup_dir:
-        print("Error: could not find env var `backup_dir`")
+        print("Error: backup directory not chosen")
         sys.exit(1)
     if not os.path.exists(backup_dir):
         print(f"Error: backup directory `{backup_dir}` does not exist")
         sys.exit(1)
-    api_token: str = os.environ["todoist_api_token"]
-    if not api_token:
-        print("Error: could not find env var `todoist_api_token`")
-        sys.exit(1)
+
+    api_token: str
+    if os.path.exists("/home/chris/.config/todo-saver/todoist-token"):
+        with open("/home/chris/.config/todo-saver/todoist-token") as file:
+            api_token = file.readline().strip()
+    else:
+        if not loaded_dotenv:
+            load_dotenv()
+        api_token = os.environ["todoist_api_token"]
+        if not api_token:
+            print("Error: could not find env var `todoist_api_token`")
+            sys.exit(1)
 
     api = TodoistAPI(api_token)
     tasks: list = api.get_tasks()
