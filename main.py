@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from datetime import datetime
+from typing import Iterator
 import argparse
 import os
 import sys
@@ -20,6 +21,7 @@ import sys
 import jsonpickle # pip install jsonpickle
 from dotenv import load_dotenv # pip install python-dotenv
 from todoist_api_python.api import TodoistAPI # pip install todoist-api-python
+from todoist_api_python.models import Task # pip install todoist-api-python
 
 
 def main():
@@ -56,12 +58,18 @@ def main():
             sys.exit(1)
 
     api = TodoistAPI(api_token)
-    tasks: list = api.get_tasks()
+    tasks_iter: Iterator[list[Task]] = api.get_tasks()
+
+    tasks: list[Task] = []
+    for tasks_page in tasks_iter:  # each iteration fetches a page of tasks
+        tasks.extend(tasks_page)
     print(f"Found {len(tasks)} tasks")
 
-    tasks_json: str = jsonpickle.encode(tasks)
+    tasks_json = jsonpickle.encode(tasks)
+    assert isinstance(tasks_json, str)
+
     now: str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    file_name: str = f"{now}_todoist_backup.json"
+    file_name: str = f"{now}_todoist_backup_v2.json"
     file_path: str = os.path.join(backup_dir, file_name).replace("\\", "/")
     with open(file_path, "x", encoding="utf8") as f:
         f.write(tasks_json)

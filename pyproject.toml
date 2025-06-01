@@ -1,0 +1,11 @@
+[project]
+name = "todo-saver"
+version = "0.0.1"
+description = "Back up your Todoist tasks to a JSON file"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "jsonpickle>=4.1.0",
+    "python-dotenv>=1.1.0",
+    "todoist-api-python>=3.1.0",
+]
